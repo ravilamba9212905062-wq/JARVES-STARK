@@ -1,0 +1,57 @@
+# Codemagic CI configuration for JARVES STARK Maximum JARVIS V15
+# Native Android project. No secrets are required for the debug APK workflow.
+# For a signed release, add an Android keystore in Codemagic and use the
+# release workflow after wiring signing credentials into app/build.gradle.kts.
+
+workflows:
+  jarves-android-debug:
+    name: JARVES Android Debug APK
+    max_build_duration: 120
+    instance_type: linux_x2
+    environment:
+      vars:
+        PACKAGE_NAME: "com.jarves.stark"
+    scripts:
+      - name: Set Android SDK location
+        script: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
+      - name: Show Java and Gradle environment
+        script: |
+          java -version
+          if [ -x ./gradlew ]; then
+            ./gradlew --version
+          else
+            gradle --version
+          fi
+      - name: Build JARVES debug APK
+        script: |
+          if [ -x ./gradlew ]; then
+            ./gradlew clean assembleDebug --stacktrace
+          else
+            gradle clean assembleDebug --stacktrace
+          fi
+    artifacts:
+      - app/build/outputs/apk/debug/*.apk
+      - app/build/outputs/**/*.apk
+
+  jarves-android-release-unsigned:
+    name: JARVES Android Release APK (unsigned)
+    max_build_duration: 120
+    instance_type: linux_x2
+    environment:
+      vars:
+        PACKAGE_NAME: "com.jarves.stark"
+    scripts:
+      - name: Set Android SDK location
+        script: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
+      - name: Build JARVES release APK
+        script: |
+          if [ -x ./gradlew ]; then
+            ./gradlew clean assembleRelease --stacktrace
+          else
+            gradle clean assembleRelease --stacktrace
+          fi
+    artifacts:
+      - app/build/outputs/apk/release/*.apk
+      - app/build/outputs/**/*.apk

@@ -1,0 +1,6 @@
+<resources>
+    <style name="Theme.Jarves" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:fontFamily">@font/jarves_noto_devanagari</item>
+        <item name="fontFamily">@font/jarves_noto_devanagari</item>
+    </style>
+</resources>

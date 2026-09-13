@@ -1,0 +1,10 @@
+{
+  "version": 11,
+  "retention": "no_automatic_expiry",
+  "storage": "local_sqlite",
+  "fixed_message_limit": false,
+  "practical_limit": "available_device_storage_and_sqlite_performance",
+  "ai_context": "recent_and_relevant_subset_only",
+  "export": "plain_text",
+  "warning": "uninstalling_app_or_clearing_app_data_can_delete_local_memory"
+}
