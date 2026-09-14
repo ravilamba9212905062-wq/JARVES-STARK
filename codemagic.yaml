@@ -7,7 +7,7 @@ workflows:
   jarves-android-debug:
     name: JARVES Android Debug APK
     max_build_duration: 120
-    instance_type: linux_x2
+    instance_type: mac_mini_m2
     environment:
       vars:
         PACKAGE_NAME: "com.jarves.stark"
@@ -37,7 +37,7 @@ workflows:
   jarves-android-release-unsigned:
     name: JARVES Android Release APK (unsigned)
     max_build_duration: 120
-    instance_type: linux_x2
+    instance_type: mac_mini_m2
     environment:
       vars:
         PACKAGE_NAME: "com.jarves.stark"
