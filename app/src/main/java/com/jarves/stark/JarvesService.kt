@@ -79,14 +79,12 @@ class JarvesService : Service() {
                     ?.firstOrNull()?.lowercase(Locale.getDefault()) ?: ""
                 if (text.isNotBlank()) {
                     // Never save a possible secret/password utterance in long-term memory.
-                    val wakeOnly = text.replace("jarves", "", true).replace("jarvis", "", true).replace("hey", "", true).replace("hi", "", true).replace("hello", "", true).replace("jarvis", "", true).replace("hey", "", true).replace("hi", "", true).replace("hello", "", true).replace("जार्वेस", "").replace("जार्विस", "").trim()
+                    val wakeOnly = text.replace("jarves", "", true).replace("jarvis", "", true).replace("hey", "", true).replace("hi", "", true).replace("hello", "", true).replace("जार्वेस", "").replace("जार्विस", "").trim()
                     val secretAttempt = wakeOnly.startsWith("पासवर्ड") || wakeOnly.startsWith("password", true) || wakeOnly.startsWith("secret", true) || (auth.hasSecret() && !auth.isUnlocked() && wakeOnly.isNotBlank())
                     if (!secretAttempt) memory.add("user_voice", text)
                 }
                 handle(text)
-                voiceHandler.postDelayed({ if (serviceRunning) listen() }, 2500)
             }
-            override fun onError(e: Int) { voiceHandler.postDelayed({ if (serviceRunning) listen() }, 900) }
             override fun onReadyForSpeech(p: Bundle?) {}
             override fun onBeginningOfSpeech() {}
             override fun onRmsChanged(r: Float) {}
@@ -107,7 +105,7 @@ class JarvesService : Service() {
         val wake = s.contains("jarves") || s.contains("jarvis") || s.contains("जार्वेस") || s.contains("जार्विस")
         val activeConversation = conversationActive && System.currentTimeMillis() < conversationUntil
         if (!wake && !activeConversation) return
-        val cmd = if (wake) s.replace("jarves", "", true).replace("jarvis", "", true).replace("hey", "", true).replace("hi", "", true).replace("hello", "", true).replace("jarvis", "", true).replace("hey", "", true).replace("hi", "", true).replace("hello", "", true).replace("जार्वेस", "").replace("जार्विस", "").trim() else s.trim()
+        val cmd = if (wake) s.replace("jarves", "", true).replace("jarvis", "", true).replace("hey", "", true).replace("hi", "", true).replace("hello", "", true).replace("जार्वेस", "").replace("जार्विस", "").trim() else s.trim()
         if (cmd.isBlank()) {
             conversationActive = true
             conversationUntil = System.currentTimeMillis() + 30_000L
