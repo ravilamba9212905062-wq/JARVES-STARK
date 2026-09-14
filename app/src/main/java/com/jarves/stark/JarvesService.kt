@@ -37,7 +37,6 @@ class JarvesService : Service() {
     override fun onCreate() {
         super.onCreate()
         serviceRunning = true
-        serviceRunning = true
         memory = MemoryStore(this)
         auth = AuthManager(this)
         if (auth.hasSecret()) auth.lock()
@@ -398,13 +397,6 @@ class JarvesService : Service() {
     override fun onDestroy() {
         serviceRunning = false
         speaking = false
-        voiceHandler.removeCallbacksAndMessages(null)
-        serviceRunning = false
-        speaking = false
-        voiceHandler.removeCallbacksAndMessages(null)
-        serviceRunning = false
-        voiceHandler.removeCallbacksAndMessages(null)
-        serviceRunning = false
         voiceHandler.removeCallbacksAndMessages(null)
         serviceScope.cancel()
         recognizer?.destroy()
