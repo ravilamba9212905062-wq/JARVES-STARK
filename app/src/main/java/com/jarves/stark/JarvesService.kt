@@ -35,6 +35,7 @@ class JarvesService : Service() {
     override fun onCreate() {
         super.onCreate()
         serviceRunning = true
+        serviceRunning = true
         memory = MemoryStore(this)
         auth = AuthManager(this)
         if (auth.hasSecret()) auth.lock()
@@ -60,6 +61,7 @@ class JarvesService : Service() {
 
     private fun listen() {
         if (!serviceRunning) return
+        if (!serviceRunning) return
         if (MediaManager.isVoiceRecording()) return
         if (!SpeechRecognizer.isRecognitionAvailable(this)) return
         recognizer?.destroy()
@@ -70,7 +72,7 @@ class JarvesService : Service() {
                     ?.firstOrNull()?.lowercase(Locale.getDefault()) ?: ""
                 if (text.isNotBlank()) {
                     // Never save a possible secret/password utterance in long-term memory.
-                    val wakeOnly = text.replace("jarves", "", true).replace("जार्वेस", "").replace("जार्विस", "").trim()
+                    val wakeOnly = text.replace("jarves", "", true).replace("jarvis", "", true).replace("hey", "", true).replace("hi", "", true).replace("hello", "", true).replace("जार्वेस", "").replace("जार्विस", "").trim()
                     val secretAttempt = wakeOnly.startsWith("पासवर्ड") || wakeOnly.startsWith("password", true) || wakeOnly.startsWith("secret", true) || (auth.hasSecret() && !auth.isUnlocked() && wakeOnly.isNotBlank())
                     if (!secretAttempt) memory.add("user_voice", text)
                 }
@@ -86,6 +88,7 @@ class JarvesService : Service() {
             override fun onPartialResults(b: Bundle?) {}
             override fun onEvent(t: Int, p: Bundle?) {}
         })
+        if (!serviceRunning) return
         recognizer!!.startListening(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "hi-IN")
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
@@ -97,7 +100,7 @@ class JarvesService : Service() {
         val wake = s.contains("jarves") || s.contains("jarvis") || s.contains("जार्वेस") || s.contains("जार्विस")
         val activeConversation = conversationActive && System.currentTimeMillis() < conversationUntil
         if (!wake && !activeConversation) return
-        val cmd = if (wake) s.replace("jarves", "", true).replace("जार्वेस", "").replace("जार्विस", "").trim() else s.trim()
+        val cmd = if (wake) s.replace("jarves", "", true).replace("jarvis", "", true).replace("hey", "", true).replace("hi", "", true).replace("hello", "", true).replace("जार्वेस", "").replace("जार्विस", "").trim() else s.trim()
         if (cmd.isBlank()) {
             conversationActive = true
             conversationUntil = System.currentTimeMillis() + 30_000L
@@ -383,6 +386,8 @@ class JarvesService : Service() {
     }
 
     override fun onDestroy() {
+        serviceRunning = false
+        voiceHandler.removeCallbacksAndMessages(null)
         serviceRunning = false
         voiceHandler.removeCallbacksAndMessages(null)
         serviceScope.cancel()

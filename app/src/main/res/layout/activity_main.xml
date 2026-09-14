@@ -3,10 +3,6 @@
 <LinearLayout android:orientation="vertical" android:padding="24dp" android:gravity="center_horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
     <TextView android:text="JARVES STARK" android:textSize="30sp" android:textStyle="bold" android:layout_marginBottom="16dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
     <Switch android:id="@+id/toggle" android:text="JARVES ON / OFF" android:textSize="20sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-    <Button android:id="@+id/startJarves" android:text="START JARVIS — सुनना शुरू करें" android:textSize="18sp" android:layout_marginTop="12dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-    <Button android:id="@+id/stopJarves" android:text="STOP JARVIS" android:textSize="18sp" android:layout_marginTop="8dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-    <Button android:id="@+id/startJarves" android:text="START JARVIS — सुनना शुरू करें" android:textSize="18sp" android:layout_marginTop="12dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-    <Button android:id="@+id/stopJarves" android:text="STOP JARVIS" android:textSize="18sp" android:layout_marginTop="8dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
     <Button android:id="@+id/diagnostics" android:text="JARVES System Check / Diagnostics" android:layout_marginTop="12dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
     <Button android:id="@+id/security" android:text="Voice Security / Secret Password" android:layout_marginTop="16dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
     <Button android:id="@+id/settings" android:text="Voice &amp; Accessibility Settings" android:layout_marginTop="12dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
