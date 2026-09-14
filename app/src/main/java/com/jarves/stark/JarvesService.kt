@@ -213,7 +213,7 @@ class JarvesService : Service() {
 
             // "बंद करो" -> leaves current app via Home. Android does not allow arbitrary force-stop.
             cmd.contains("बंद") || cmd.contains("close") || cmd.contains("क्लोज") -> {
-                JarvesAccessibilityService.goHome(this)
+                JarvesAccessibilityService.goHome()
                 speak("ऐप बंद करके होम पर आ गया")
             }
 
