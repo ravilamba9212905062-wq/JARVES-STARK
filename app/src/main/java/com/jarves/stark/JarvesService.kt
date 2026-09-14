@@ -127,6 +127,22 @@ class JarvesService : Service() {
         }
     }
 
+    private fun isJarvesWakeWord(s: String): Boolean {
+        val t = s.lowercase(Locale.getDefault())
+        return t.contains("जार्वेस") || t.contains("जार्विस") || t.contains("जार्वेज") ||
+            Regex("(?i)(^|[^a-z])(hey|hi|hai|hello|hey there|hi there|hello there)[ ,.!?]*(jarves|jarvis)([^a-z]|$)").containsMatchIn(t) ||
+            Regex("(?i)(^|[^a-z])(jarves|jarvis)([^a-z]|$)").containsMatchIn(t)
+    }
+
+    private fun cleanJarvesWakeWord(s: String): String {
+        return s.lowercase(Locale.getDefault())
+            .replace(Regex("(?i)\\b(hey|hi|hai|hello|there|hey there|hi there|hello there)\\b"), " ")
+            .replace("आई", " ").replace("हे", " ").replace("हाय", " ").replace("हाई", " ").replace("है", " ")
+            .replace("ए", " ").replace("ऐ", " ").replace("ओ", " ")
+            .replace("जार्वेस", " ").replace("जार्विस", " ").replace("जार्वेज", " ")
+            .replace("जारवेस", " ").replace("जारविस", " ").replace("जर्वेस", " ").replace("जर्विस", " ")
+            .replace(Regex("\\s+"), " ").trim()
+    }
     private fun handle(s: String) {
         val wake = isJarvesWakeWord(s)
         val activeConversation = conversationActive && System.currentTimeMillis() < conversationUntil
