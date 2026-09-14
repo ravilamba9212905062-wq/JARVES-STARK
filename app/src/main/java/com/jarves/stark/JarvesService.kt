@@ -56,14 +56,13 @@ class JarvesService : Service() {
 
     private fun createNotification() {
         if (Build.VERSION.SDK_INT >= 26)
-            getSystemService(NotificationManager::class.java)
                 .createNotificationChannel(NotificationChannel(channel, "JARVES Voice", NotificationManager.IMPORTANCE_LOW))
         val n = Notification.Builder(this, channel)
             .setContentTitle("JARVES is listening")
             .setContentText("Say: Hey JARVES")
             .setSmallIcon(android.R.drawable.ic_btn_speak_now).build()
         if (!SpeechRecognizer.isRecognitionAvailable(this)) { voiceHandler.postDelayed({ if (serviceRunning && !speaking) listen() }, 2000); return }
-    }
+        if (!SpeechRecognizer.isRecognitionAvailable(this)) { voiceHandler.postDelayed({ if (serviceRunning && !speaking) listen() }, 2000); return }
 
     private fun listen() {
         if (!serviceRunning || speaking) return
