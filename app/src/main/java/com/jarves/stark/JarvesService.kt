@@ -69,7 +69,7 @@ class JarvesService : Service() {
         if (!serviceRunning || speaking) return
         if (!serviceRunning || speaking) return
         if (MediaManager.isVoiceRecording()) return
-        if (!SpeechRecognizer.isRecognitionAvailable(this)) return
+        if (!SpeechRecognizer.isRecognitionAvailable(this)) { voiceHandler.postDelayed({ if (serviceRunning \if (!SpeechRecognizer.isRecognitionAvailable(this)) return\if (!SpeechRecognizer.isRecognitionAvailable(this)) return !speaking) listen() }, 2000); return }
         recognizer?.destroy()
         recognizer = SpeechRecognizer.createSpeechRecognizer(this)
         recognizer!!.setRecognitionListener(object : RecognitionListener {
@@ -78,7 +78,7 @@ class JarvesService : Service() {
                     ?.firstOrNull()?.lowercase(Locale.getDefault()) ?: ""
                 if (text.isNotBlank()) {
                     // Never save a possible secret/password utterance in long-term memory.
-                    val wakeOnly = text.replace("jarves", "", true).replace("jarvis", "", true).replace(Regex("(?i)\\b(hey|hi|hello)\\b"), "").replace("जार्वेस", "").replace("जार्विस", "").trim()
+                    val wakeOnly = cleanJarvesWakeWord(text)
                     val secretAttempt = wakeOnly.startsWith("पासवर्ड") || wakeOnly.startsWith("password", true) || wakeOnly.startsWith("secret", true) || (auth.hasSecret() && !auth.isUnlocked() && wakeOnly.isNotBlank())
                     if (!secretAttempt) memory.add("user_voice", text)
                 }
@@ -101,11 +101,26 @@ class JarvesService : Service() {
         })
     }
 
+    private fun isJarvesWakeWord(s: String): Boolean {
+        val t = s.lowercase(Locale.getDefault()).replace("जर्वेस", "जार्वेस").replace("जार्वेज", "जार्वेस").replace("जारवेस", "जार्वेस").replace("जारविस", "जार्विस").replace("जर्विस", "जार्विस")
+        return Regex("(?i)(^|[^a-z])(hey|hi|hai|hello|hey there|hi there|hello there)[ ,.!?]*(jarves|jarvis)([^a-z]|$)").containsMatchIn(t) ||
+               Regex("(?i)(^|[^a-z])(jarves|jarvis)([^a-z]|$)").containsMatchIn(t) ||
+               t.contains("जार्वेस") || t.contains("जार्विस")
+    }
+    private fun cleanJarvesWakeWord(s: String): String {
+        return s.lowercase(Locale.getDefault())
+            .replace(Regex("(?i)\\b(hey|hi|hai|hello|there|hey there|hi there|hello there)\\b"), " ")
+            .replace("हे", " ").replace("हाय", " ").replace("हाई", " ").replace("है", " ")
+            .replace("ए", " ").replace("ऐ", " ").replace("ओ", " ")
+            .replace("जार्वेस", " ").replace("जार्विस", " ").replace("जार्वेज", " ")
+            .replace("जारवेस", " ").replace("जारविस", " ").replace("जर्वेस", " ").replace("जर्विस", " ")
+            .replace(Regex("\\s+"), " ").trim()
+    }
     private fun handle(s: String) {
-        val wake = s.contains("jarves") || s.contains("jarvis") || s.contains("जार्वेस") || s.contains("जार्विस")
+        val wake = isJarvesWakeWord(s)
         val activeConversation = conversationActive && System.currentTimeMillis() < conversationUntil
         if (!wake && !activeConversation) return
-        val cmd = if (wake) s.replace("jarves", "", true).replace("jarvis", "", true).replace(Regex("(?i)\\b(hey|hi|hello)\\b"), "").replace("जार्वेस", "").replace("जार्विस", "").trim() else s.trim()
+        val cmd = if (wake) cleanJarvesWakeWord(s) else s.trim()
         if (cmd.isBlank()) {
             conversationActive = true
             conversationUntil = System.currentTimeMillis() + 30_000L
