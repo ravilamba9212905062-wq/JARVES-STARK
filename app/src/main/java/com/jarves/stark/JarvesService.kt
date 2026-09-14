@@ -68,59 +68,66 @@ class JarvesService : Service() {
     }
     private fun listen() {
         if (!serviceRunning || speaking) return
-        if (MediaManager.isVoiceRecording()) return
+        if (MediaManager.isVoiceRecording()) {
+            voiceHandler.postDelayed({ if (serviceRunning && !speaking) listen() }, 1200)
+            return
+        }
         if (!SpeechRecognizer.isRecognitionAvailable(this)) {
-            voiceHandler.postDelayed({ if (serviceRunning && !speaking) listen() }, 2000)
+            voiceHandler.postDelayed({ if (serviceRunning && !speaking) listen() }, 3000)
             return
         }
         recognizer?.destroy()
+        recognizer = null
         recognizer = SpeechRecognizer.createSpeechRecognizer(this)
         recognizer!!.setRecognitionListener(object : RecognitionListener {
-            override fun onResults(b: Bundle?) {
-                val text = b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                    ?.firstOrNull()?.lowercase(Locale.getDefault()) ?: ""
+            override fun onReadyForSpeech(params: Bundle?) {}
+            override fun onBeginningOfSpeech() {}
+            override fun onRmsChanged(rmsdB: Float) {}
+            override fun onBufferReceived(buffer: ByteArray?) {}
+            override fun onEndOfSpeech() {}
+            override fun onResults(results: Bundle?) {
+                if (!serviceRunning || speaking) return
+                val text = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.trim() ?: ""
+                recognizer?.destroy()
+                recognizer = null
                 if (text.isNotBlank()) {
                     val wakeOnly = cleanJarvesWakeWord(text)
                     val secretAttempt = wakeOnly.startsWith("पासवर्ड") || wakeOnly.startsWith("password", true) || wakeOnly.startsWith("secret", true) || (auth.hasSecret() && !auth.isUnlocked() && wakeOnly.isNotBlank())
                     if (!secretAttempt) memory.add("user_voice", text)
                 }
                 handle(text)
-            }
-            override fun onReadyForSpeech(p: Bundle?) {}
-            override fun onBeginningOfSpeech() {}
-            override fun onRmsChanged(r: Float) {}
-            override fun onBufferReceived(b: ByteArray?) {}
-            override fun onEndOfSpeech() {}
-            override fun onPartialResults(b: Bundle?) {}
-            override fun onEvent(t: Int, p: Bundle?) {}
-            override fun onError(e: Int) {
                 if (serviceRunning && !speaking) {
-                    voiceHandler.postDelayed({ if (serviceRunning && !speaking) listen() }, 900)
+                    voiceHandler.postDelayed({ if (serviceRunning && !speaking) listen() }, 500)
+                }
+            }
+            override fun onPartialResults(partialResults: Bundle?) {}
+            override fun onEvent(eventType: Int, params: Bundle?) {}
+            override fun onError(error: Int) {
+                recognizer?.destroy()
+                recognizer = null
+                if (serviceRunning && !speaking) {
+                    voiceHandler.postDelayed({ if (serviceRunning && !speaking) listen() }, 800)
                 }
             }
         })
-        recognizer!!.startListening(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "hi-IN")
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-        })
+            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
+        }
+        try {
+            recognizer!!.startListening(intent)
+        } catch (_: Exception) {
+            recognizer?.destroy()
+            recognizer = null
+            if (serviceRunning && !speaking) {
+                voiceHandler.postDelayed({ if (serviceRunning && !speaking) listen() }, 1200)
+            }
+        }
     }
-    private fun isJarvesWakeWord(s: String): Boolean {
-        val t = s.lowercase(Locale.getDefault()).replace("जर्वेस", "जार्वेस").replace("जार्वेज", "जार्वेस").replace("जारवेस", "जार्वेस").replace("जारविस", "जार्विस").replace("जर्विस", "जार्विस")
-        return Regex("(?i)(^|[^a-z])(hey|hi|hai|hello|hey there|hi there|hello there)[ ,.!?]*(jarves|jarvis)([^a-z]|$)").containsMatchIn(t) ||
-               Regex("(?i)(^|[^a-z])(jarves|jarvis)([^a-z]|$)").containsMatchIn(t) ||
-               t.contains("जार्वेस") || t.contains("जार्विस")
-    }
-    private fun cleanJarvesWakeWord(s: String): String {
-        return s.lowercase(Locale.getDefault())
-            .replace(Regex("(?i)\\b(hey|hi|hai|hello|there|hey there|hi there|hello there)\\b"), " ")
-            .replace("हे", " ").replace("हाय", " ").replace("हाई", " ").replace("है", " ")
-            .replace("ए", " ").replace("ऐ", " ").replace("ओ", " ")
-            .replace("जार्वेस", " ").replace("जार्विस", " ").replace("जार्वेज", " ")
-            .replace("जारवेस", " ").replace("जारविस", " ").replace("जर्वेस", " ").replace("जर्विस", " ")
-            .replace(Regex("\\s+"), " ").trim()
-    }
-    private fun handle(s: String) {
+
+    private fun handle(
         val wake = isJarvesWakeWord(s)
         val activeConversation = conversationActive && System.currentTimeMillis() < conversationUntil
         if (!wake && !activeConversation) return
