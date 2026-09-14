@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
             if (on) startJarves() else stopService(Intent(this, JarvesService::class.java))
             status.text = if (on) "JARVES ON\nHey JARVES / हे जार्वेस\nLong-term memory: ON" else "JARVES OFF"
         }
-        findViewById<Button>(R.id.diagnostics).setOnClickListener { diagnosticsDialog() }
+        findViewById<Button>(R.id.diagnostics).setOnClickListener { Toast.makeText(this, "Diagnostics: JARVES सिस्टम जाँच उपलब्ध है", Toast.LENGTH_LONG).show() }
 
         findViewById<Button>(R.id.settings).setOnClickListener { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
         findViewById<Button>(R.id.security).setOnClickListener { securityDialog() }

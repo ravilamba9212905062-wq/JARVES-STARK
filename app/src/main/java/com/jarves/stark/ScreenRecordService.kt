@@ -44,14 +44,14 @@ class ScreenRecordService : Service() {
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setVideoEncoder(MediaRecorder.VideoEncoder.H264)
-            setVideoSize(dm.width, dm.height)
+            setVideoSize(dm.widthPixels, dm.heightPixels)
             setVideoFrameRate(30)
             setVideoEncodingBitRate(6_000_000)
             outputPfd = contentResolver.openFileDescriptor(uri, "w")
             setOutputFile(outputPfd!!.fileDescriptor)
             prepare()
         }
-        display = projection!!.createVirtualDisplay("JARVES", dm.width, dm.height, dm.densityDpi, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR, recorder!!.surface, null, null)
+        display = projection!!.createVirtualDisplay("JARVES", dm.widthPixels, dm.heightPixels, dm.densityDpi, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR, recorder!!.surface, null, null)
         recorder!!.start()
         return START_NOT_STICKY
     }

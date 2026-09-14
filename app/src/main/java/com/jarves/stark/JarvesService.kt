@@ -213,7 +213,7 @@ class JarvesService : Service() {
 
             // "बंद करो" -> leaves current app via Home. Android does not allow arbitrary force-stop.
             cmd.contains("बंद") || cmd.contains("close") || cmd.contains("क्लोज") -> {
-                performGlobalAction(GLOBAL_ACTION_HOME)
+                JarvesAccessibilityService.goHome(this)
                 speak("ऐप बंद करके होम पर आ गया")
             }
 
@@ -325,7 +325,7 @@ class JarvesService : Service() {
     private fun extractCode(s: String): String {
         return Regex("""[A-Za-z0-9@#*._-]{2,32}""").findAll(s)
             .map { it.value }.lastOrNull { !it.equals("code", true) && !it.equals("type", true) }
-            ?.value ?: ""
+            ?: ""
     }
 
     private fun openByName(name: String) {
