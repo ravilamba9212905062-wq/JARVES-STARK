@@ -38,6 +38,8 @@ class JarvesService : Service() {
         listen()
     }
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
+
     private fun createNotification() {
         if (Build.VERSION.SDK_INT >= 26)
             getSystemService(NotificationManager::class.java)
