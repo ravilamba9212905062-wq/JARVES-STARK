@@ -55,20 +55,24 @@ class JarvesService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_NOT_STICKY
 
     private fun createNotification() {
-        if (Build.VERSION.SDK_INT >= 26)
-                .createNotificationChannel(NotificationChannel(channel, "JARVES Voice", NotificationManager.IMPORTANCE_LOW))
+        if (Build.VERSION.SDK_INT >= 26) {
+            val nm = getSystemService(NotificationManager::class.java)
+            nm.createNotificationChannel(NotificationChannel(channel, "JARVES Voice", NotificationManager.IMPORTANCE_LOW))
+        }
         val n = Notification.Builder(this, channel)
             .setContentTitle("JARVES is listening")
             .setContentText("Say: Hey JARVES")
-            .setSmallIcon(android.R.drawable.ic_btn_speak_now).build()
-        if (!SpeechRecognizer.isRecognitionAvailable(this)) { voiceHandler.postDelayed({ if (serviceRunning && !speaking) listen() }, 2000); return }
-        if (!SpeechRecognizer.isRecognitionAvailable(this)) { voiceHandler.postDelayed({ if (serviceRunning && !speaking) listen() }, 2000); return }
-
+            .setSmallIcon(android.R.drawable.ic_btn_speak_now)
+            .build()
+        startForeground(1001, n)
+    }
     private fun listen() {
         if (!serviceRunning || speaking) return
-        if (!serviceRunning || speaking) return
         if (MediaManager.isVoiceRecording()) return
-        if (!SpeechRecognizer.isRecognitionAvailable(this)) { voiceHandler.postDelayed({ if (serviceRunning \if (!SpeechRecognizer.isRecognitionAvailable(this)) return\if (!SpeechRecognizer.isRecognitionAvailable(this)) return !speaking) listen() }, 2000); return }
+        if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+            voiceHandler.postDelayed({ if (serviceRunning && !speaking) listen() }, 2000)
+            return
+        }
         recognizer?.destroy()
         recognizer = SpeechRecognizer.createSpeechRecognizer(this)
         recognizer!!.setRecognitionListener(object : RecognitionListener {
@@ -76,7 +80,6 @@ class JarvesService : Service() {
                 val text = b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                     ?.firstOrNull()?.lowercase(Locale.getDefault()) ?: ""
                 if (text.isNotBlank()) {
-                    // Never save a possible secret/password utterance in long-term memory.
                     val wakeOnly = cleanJarvesWakeWord(text)
                     val secretAttempt = wakeOnly.startsWith("पासवर्ड") || wakeOnly.startsWith("password", true) || wakeOnly.startsWith("secret", true) || (auth.hasSecret() && !auth.isUnlocked() && wakeOnly.isNotBlank())
                     if (!secretAttempt) memory.add("user_voice", text)
@@ -90,16 +93,19 @@ class JarvesService : Service() {
             override fun onEndOfSpeech() {}
             override fun onPartialResults(b: Bundle?) {}
             override fun onEvent(t: Int, p: Bundle?) {}
-            override fun onError(e: Int) { if (serviceRunning && !speaking) voiceHandler.postDelayed({ if (serviceRunning && !speaking) listen() }, 900) }
+            override fun onError(e: Int) {
+                if (serviceRunning && !speaking) {
+                    voiceHandler.postDelayed({ if (serviceRunning && !speaking) listen() }, 900)
+                }
+            }
         })
-        if (!serviceRunning || speaking) return
         recognizer!!.startListening(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "hi-IN")
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
         })
     }
-
+    private fun isJarvesWakeWord(s: String): Boolean {
     private fun isJarvesWakeWord(s: String): Boolean {
         val t = s.lowercase(Locale.getDefault()).replace("जर्वेस", "जार्वेस").replace("जार्वेज", "जार्वेस").replace("जारवेस", "जार्वेस").replace("जारविस", "जार्विस").replace("जर्विस", "जार्विस")
         return Regex("(?i)(^|[^a-z])(hey|hi|hai|hello|hey there|hi there|hello there)[ ,.!?]*(jarves|jarvis)([^a-z]|$)").containsMatchIn(t) ||
