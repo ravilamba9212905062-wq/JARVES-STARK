@@ -23,6 +23,8 @@ class JarvesService : Service() {
     private var failedAuth = 0
     private var authBlockedUntil = 0L
     private var pendingDelete: String? = null
+    private var conversationActive = false
+    private var conversationUntil = 0L
     private var recognizer: SpeechRecognizer? = null
     private lateinit var tts: TextToSpeech
     private val channel = "jarves_voice"
@@ -34,8 +36,10 @@ class JarvesService : Service() {
         auth = AuthManager(this)
         if (auth.hasSecret()) auth.lock()
         createNotification()
-        tts = TextToSpeech(this) { tts.language = Locale("hi", "IN") }
-        listen()
+        tts = TextToSpeech(this) { status ->
+            if (status == TextToSpeech.SUCCESS) tts.language = Locale("hi", "IN")
+        Handler(Looper.getMainLooper()).postDelayed({ listen() }, 1000)
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
@@ -67,7 +71,7 @@ class JarvesService : Service() {
                     if (!secretAttempt) memory.add("user_voice", text)
                 }
                 handle(text)
-                Handler(Looper.getMainLooper()).postDelayed({ listen() }, 500)
+                Handler(Looper.getMainLooper()).postDelayed({ listen() }, 2500)
             }
             override fun onError(e: Int) { Handler(Looper.getMainLooper()).postDelayed({ listen() }, 900) }
             override fun onReadyForSpeech(p: Bundle?) {}
@@ -87,8 +91,17 @@ class JarvesService : Service() {
 
     private fun handle(s: String) {
         val wake = s.contains("jarves") || s.contains("जार्वेस") || s.contains("जार्विस")
-        if (!wake) return
-        val cmd = s.replace("jarves", "", true).replace("जार्वेस", "").replace("जार्विस", "").trim()
+        val activeConversation = conversationActive && System.currentTimeMillis() < conversationUntil
+        if (!wake && !activeConversation) return
+        val cmd = if (wake) s.replace("jarves", "", true).replace("जार्वेस", "").replace("जार्विस", "").trim() else s.trim()
+        if (cmd.isBlank()) {
+            conversationActive = true
+            conversationUntil = System.currentTimeMillis() + 30_000L
+            speak("हाँ भाई, बोलो")
+            return
+        }
+        conversationActive = true
+        conversationUntil = System.currentTimeMillis() + 30_000L
 
         // If a secret is configured, JARVES accepts ONLY the secret passphrase/PIN
         // while locked. The passphrase is checked locally and is never sent to AI/backend.
@@ -360,7 +373,9 @@ class JarvesService : Service() {
 
     private fun speak(x: String) {
         memory.add("jarves", x)
-        if (::tts.isInitialized) tts.speak(x, TextToSpeech.QUEUE_FLUSH, null, "jarves")
+        if (::tts.isInitialized) {
+            tts.speak(x, TextToSpeech.QUEUE_FLUSH, null, "jarves")
+        }
     }
 
     override fun onDestroy() {
