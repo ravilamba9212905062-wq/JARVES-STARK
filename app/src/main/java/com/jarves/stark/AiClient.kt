@@ -8,6 +8,7 @@ import java.net.URLEncoder
 import java.net.URL
 import java.nio.charset.StandardCharsets
 import org.json.JSONObject
+import java.util.regex.Pattern
 
 object AiClient {
     private const val PREF = "jarves_ai"
@@ -22,7 +23,7 @@ object AiClient {
             .getString(KEY_URL, "") ?: ""
 
     fun backendStatus(context: Context): String =
-        if (getBackendUrl(context).isBlank()) "keyless web mode" else "connected URL set"
+        if (getBackendUrl(context).isBlank()) "free web research mode" else "connected URL set"
 
     fun ask(context: Context, message: String, callback: (String) -> Unit) {
         askWithWebFallback(context, message, callback)
@@ -38,71 +39,175 @@ object AiClient {
 
         Thread {
             try {
-                val answer = webAnswer(clean)
-
-                if (answer.isNotBlank()) {
-                    callback(answer.take(1800))
-                } else {
-                    callback("मुझे अभी इसका भरोसेमंद जवाब नहीं मिला।")
-                }
+                val answer = intelligentAnswer(clean)
+                callback(
+                    if (answer.isNotBlank())
+                        answer.take(1800)
+                    else
+                        "भाई, मुझे अभी इसका भरोसेमंद जवाब नहीं मिला।"
+                )
             } catch (_: Exception) {
-                callback("अभी इंटरनेट से जानकारी नहीं मिल पाई।")
+                callback("भाई, अभी इंटरनेट से जानकारी नहीं मिल पाई।")
             }
         }.start()
     }
 
-    private fun webAnswer(query: String): String {
-        val encoded = URLEncoder.encode(query, StandardCharsets.UTF_8.toString())
-        val url = URL("https://api.duckduckgo.com/?q=$encoded&format=json&no_html=1&skip_disambig=0")
+    private fun intelligentAnswer(query: String): String {
+        val ddg = duckAnswer(query)
+        if (ddg.isNotBlank()) return ddg
 
-        val conn = (url.openConnection() as HttpURLConnection).apply {
-            requestMethod = "GET"
-            connectTimeout = 10000
-            readTimeout = 12000
-            setRequestProperty("User-Agent", "JARVES/15 Android")
-        }
+        val wiki = wikipediaAnswer(query)
+        if (wiki.isNotBlank()) return wiki
 
+        val search = webSearch(query)
+        if (search.isNotBlank()) return search
+
+        return ""
+    }
+
+    private fun duckAnswer(query: String): String {
         return try {
-            val stream = if (conn.responseCode in 200..299)
-                conn.inputStream
-            else
-                conn.errorStream
+            val encoded = URLEncoder.encode(query, StandardCharsets.UTF_8.toString())
+            val url = URL(
+                "https://api.duckduckgo.com/?q=$encoded&format=json&no_html=1&skip_disambig=0"
+            )
 
-            val text = BufferedReader(
-                InputStreamReader(stream, StandardCharsets.UTF_8)
-            ).use { it.readText() }
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 8000
+                readTimeout = 10000
+                setRequestProperty("User-Agent", "JARVES/15 Android")
+            }
 
-            val json = JSONObject(text)
+            try {
+                if (conn.responseCode !in 200..299) return ""
 
-            val abstractText = json.optString("AbstractText", "").trim()
-            val heading = json.optString("Heading", "").trim()
+                val text = BufferedReader(
+                    InputStreamReader(conn.inputStream, StandardCharsets.UTF_8)
+                ).use { it.readText() }
 
-            if (abstractText.isNotBlank()) {
-                if (heading.isNotBlank()) {
-                    "$heading। $abstractText"
+                val json = JSONObject(text)
+                val abstractText = json.optString("AbstractText", "").trim()
+                val heading = json.optString("Heading", "").trim()
+
+                if (abstractText.isNotBlank()) {
+                    if (heading.isNotBlank()) "$heading। $abstractText"
+                    else abstractText
                 } else {
-                    abstractText
+                    ""
                 }
-            } else {
-                val topics = json.optJSONArray("RelatedTopics")
-                var result = ""
+            } finally {
+                conn.disconnect()
+            }
+        } catch (_: Exception) {
+            ""
+        }
+    }
 
-                if (topics != null) {
-                    for (i in 0 until topics.length()) {
-                        val item = topics.optJSONObject(i) ?: continue
-                        val textValue = item.optString("Text", "").trim()
-                        if (textValue.isNotBlank()) {
-                            result = textValue
-                            break
-                        }
+    private fun wikipediaAnswer(query: String): String {
+        return try {
+            val encoded = URLEncoder.encode(query, StandardCharsets.UTF_8.toString())
+            val url = URL(
+                "https://en.wikipedia.org/api/rest_v1/page/summary/$encoded"
+            )
+
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 8000
+                readTimeout = 10000
+                setRequestProperty("User-Agent", "JARVES/15 Android")
+            }
+
+            try {
+                if (conn.responseCode !in 200..299) return ""
+
+                val text = BufferedReader(
+                    InputStreamReader(conn.inputStream, StandardCharsets.UTF_8)
+                ).use { it.readText() }
+
+                val json = JSONObject(text)
+                val extract = json.optString("extract", "").trim()
+                val title = json.optString("title", "").trim()
+
+                if (extract.isNotBlank()) {
+                    if (title.isNotBlank()) "$title। $extract"
+                    else extract
+                } else {
+                    ""
+                }
+            } finally {
+                conn.disconnect()
+            }
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    private fun webSearch(query: String): String {
+        return try {
+            val encoded = URLEncoder.encode(query, StandardCharsets.UTF_8.toString())
+            val url = URL(
+                "https://html.duckduckgo.com/html/?q=$encoded"
+            )
+
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 8000
+                readTimeout = 10000
+                setRequestProperty(
+                    "User-Agent",
+                    "Mozilla/5.0 (Android) JARVES/15"
+                )
+            }
+
+            try {
+                if (conn.responseCode !in 200..299) return ""
+
+                val html = BufferedReader(
+                    InputStreamReader(conn.inputStream, StandardCharsets.UTF_8)
+                ).use { it.readText() }
+
+                val pattern = Pattern.compile(
+                    "<a[^>]*class=\"result__a\"[^>]*>(.*?)</a>|" +
+                    "<a[^>]*class=\"result__snippet\"[^>]*>(.*?)</a>",
+                    Pattern.CASE_INSENSITIVE or Pattern.DOTALL
+                )
+
+                val matcher = pattern.matcher(html)
+                val results = StringBuilder()
+
+                var count = 0
+                while (matcher.find() && count < 3) {
+                    val raw = matcher.group(1) ?: matcher.group(2) ?: ""
+                    val clean = stripHtml(raw)
+
+                    if (clean.isNotBlank()) {
+                        if (results.isNotEmpty()) results.append(" ")
+                        results.append(clean)
+                        results.append("।")
+                        count++
                     }
                 }
 
-                result
+                results.toString().trim()
+            } finally {
+                conn.disconnect()
             }
-        } finally {
-            conn.disconnect()
+        } catch (_: Exception) {
+            ""
         }
+    }
+
+    private fun stripHtml(value: String): String {
+        return value
+            .replace(Regex("<[^>]*>"), " ")
+            .replace("&amp;", "&")
+            .replace("&quot;", "\"")
+            .replace("&#39;", "'")
+            .replace("&lt;", "<")
+            .replace("&gt;", ">")
+            .replace(Regex("\\s+"), " ")
+            .trim()
     }
 
     fun analyzeMarket(
@@ -111,6 +216,6 @@ object AiClient {
         timeframe: String,
         callback: (String) -> Unit
     ) {
-        callback("Market analysis JARVES के live market engine से की जाती है।")
+        callback("मार्केट विश्लेषण JARVES के लाइव मार्केट इंजन से की जाती है।")
     }
 }

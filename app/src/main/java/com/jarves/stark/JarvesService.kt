@@ -177,6 +177,22 @@ class JarvesService : Service() {
             if (q.contains("कैमरा") || q.contains("camera")) {
                 startActivity(Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)); speak("हाँ भाई, कैमरा खोल दिया।"); return true
             }
+            if (q.contains("फेसबुक") || q.contains("facebook")) {
+                val i = packageManager.getLaunchIntentForPackage("com.facebook.katana")
+                if (i != null) { startActivity(i); speak("हाँ भाई, फेसबुक खोल दिया।"); return true }
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com")))
+                speak("हाँ भाई, फेसबुक खोल दिया।"); return true
+            }
+            if (q.contains("क्रोम") || q.contains("chrome")) {
+                val i = packageManager.getLaunchIntentForPackage("com.android.chrome")
+                if (i != null) { startActivity(i); speak("हाँ भाई, क्रोम खोल दिया।"); return true }
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com")))
+                speak("हाँ भाई, ब्राउज़र खोल दिया।"); return true
+            }
+            if (q.contains("गूगल खोल") || q.contains("google खोल") || q.contains("ब्राउज़र") || q.contains("browser")) {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com")))
+                speak("हाँ भाई, ब्राउज़र खोल दिया।"); return true
+            }
             if (q.contains("यूट्यूब") || q.contains("youtube")) {
                 val i = packageManager.getLaunchIntentForPackage("com.google.android.youtube")
                 if (i != null) { startActivity(i); speak("हाँ भाई, यूट्यूब खोल दिया।"); return true }
