@@ -143,6 +143,26 @@ class JarvesService : Service() {
             .replace("जारवेस", " ").replace("जारविस", " ").replace("जर्वेस", " ").replace("जर्विस", " ")
             .replace(Regex("\\s+"), " ").trim()
     }
+    private fun goHome(): Boolean {
+        return try {
+            performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_HOME)
+            speak("हाँ भाई, होम स्क्रीन पर आ गया।")
+            true
+        } catch (_: Exception) {
+            try {
+                val i = Intent(Intent.ACTION_MAIN)
+                i.addCategory(Intent.CATEGORY_HOME)
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(i)
+                speak("हाँ भाई, होम स्क्रीन खोल दी।")
+                true
+            } catch (_: Exception) {
+                speak("भाई, होम स्क्रीन पर नहीं जा पाया।")
+                false
+            }
+        }
+    }
+
     private fun handlePhoneCommand(s: String): Boolean {
         val q = s.lowercase(Locale.getDefault()).trim()
         try {
