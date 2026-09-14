@@ -8,6 +8,8 @@ class JarvesAccessibilityService : AccessibilityService() {
     companion object {
         @Volatile private var instance: JarvesAccessibilityService? = null
 
+        fun goHome(): Boolean { val service = instance ?: return false; return service.performGlobalAction(GLOBAL_ACTION_HOME) }
+
         fun typeText(text: String): Boolean {
             val service = instance ?: return false
             val root = service.rootInActiveWindow ?: return false
