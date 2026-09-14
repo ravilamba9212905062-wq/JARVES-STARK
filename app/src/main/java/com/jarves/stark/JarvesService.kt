@@ -106,7 +106,6 @@ class JarvesService : Service() {
         })
     }
     private fun isJarvesWakeWord(s: String): Boolean {
-    private fun isJarvesWakeWord(s: String): Boolean {
         val t = s.lowercase(Locale.getDefault()).replace("जर्वेस", "जार्वेस").replace("जार्वेज", "जार्वेस").replace("जारवेस", "जार्वेस").replace("जारविस", "जार्विस").replace("जर्विस", "जार्विस")
         return Regex("(?i)(^|[^a-z])(hey|hi|hai|hello|hey there|hi there|hello there)[ ,.!?]*(jarves|jarvis)([^a-z]|$)").containsMatchIn(t) ||
                Regex("(?i)(^|[^a-z])(jarves|jarvis)([^a-z]|$)").containsMatchIn(t) ||
