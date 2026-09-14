@@ -225,10 +225,6 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == REQ_VIDEO && resultCode == Activity.RESULT_OK) toast("Video save हो गई")
     }
 
-    private fun stopJarves() {
-        stopService(Intent(this, JarvesService::class.java))
-        status.text = "JARVES OFF"
-    }
 
     private fun startJarves() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) { ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), 10); return }
