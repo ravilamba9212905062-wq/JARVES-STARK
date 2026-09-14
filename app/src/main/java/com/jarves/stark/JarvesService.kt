@@ -90,7 +90,7 @@ class JarvesService : Service() {
     }
 
     private fun handle(s: String) {
-        val wake = s.contains("jarves") || s.contains("जार्वेस") || s.contains("जार्विस")
+        val wake = s.contains("jarves") || s.contains("jarvis") || s.contains("जार्वेस") || s.contains("जार्विस")
         val activeConversation = conversationActive && System.currentTimeMillis() < conversationUntil
         if (!wake && !activeConversation) return
         val cmd = if (wake) s.replace("jarves", "", true).replace("जार्वेस", "").replace("जार्विस", "").trim() else s.trim()

@@ -34,6 +34,8 @@ class MainActivity : AppCompatActivity() {
         requestNotificationPermission()
         WatchAgent.start(this)
         findViewById<Switch>(R.id.toggle).setOnCheckedChangeListener { _, on ->
+        findViewById<android.widget.Button>(R.id.startJarves).setOnClickListener { startJarves() }
+        findViewById<android.widget.Button>(R.id.stopJarves).setOnClickListener { stopJarves() }
             if (on) startJarves() else stopService(Intent(this, JarvesService::class.java))
             status.text = if (on) "JARVES ON\nHey JARVES / हे जार्वेस\nLong-term memory: ON" else "JARVES OFF"
         }
@@ -223,6 +225,11 @@ class MainActivity : AppCompatActivity() {
         }
         if (requestCode == REQ_PHOTO && resultCode == Activity.RESULT_OK) toast("Photo JARVES/Pictures में save हो गई")
         if (requestCode == REQ_VIDEO && resultCode == Activity.RESULT_OK) toast("Video save हो गई")
+    }
+
+    private fun stopJarves() {
+        stopService(Intent(this, JarvesService::class.java))
+        status.text = "JARVES OFF"
     }
 
     private fun startJarves() {
