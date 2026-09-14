@@ -145,8 +145,7 @@ class JarvesService : Service() {
     }
     private fun goHome(): Boolean {
         return try {
-            performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_HOME)
-            speak("हाँ भाई, होम स्क्रीन पर आ गया।")
+            val homeIntent = Intent(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_HOME); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }; startActivity(homeIntent); speak("हाँ भाई, होम स्क्रीन पर आ गया।")
             true
         } catch (_: Exception) {
             try {
