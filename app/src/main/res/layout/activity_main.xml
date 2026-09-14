@@ -5,7 +5,7 @@
     <Switch android:id="@+id/toggle" android:text="JARVES ON / OFF" android:textSize="20sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
     <Button android:id="@+id/diagnostics" android:text="JARVES System Check / Diagnostics" android:layout_marginTop="12dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
     <Button android:id="@+id/security" android:text="Voice Security / Secret Password" android:layout_marginTop="16dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-    <Button android:id="@+id/settings" android:text="Voice & Accessibility Settings" android:layout_marginTop="12dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+    <Button android:id="@+id/settings" android:text="Voice &amp; Accessibility Settings" android:layout_marginTop="12dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
     <Button android:id="@+id/aiConfig" android:text="AI API / Backend सेट करें" android:layout_marginTop="12dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
     <Button android:id="@+id/appFactory" android:text="नई App बनवाएँ (AI App Factory)" android:layout_marginTop="12dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
     <Button android:id="@+id/memory" android:text="Long-Term Memory / याददाश्त" android:layout_marginTop="12dp" android:layout_width="match_parent" android:layout_height="wrap_content"/>
