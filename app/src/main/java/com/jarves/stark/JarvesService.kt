@@ -62,7 +62,7 @@ class JarvesService : Service() {
             .setContentTitle("JARVES is listening")
             .setContentText("Say: Hey JARVES")
             .setSmallIcon(android.R.drawable.ic_btn_speak_now).build()
-        startForeground(101, n)
+        if (!SpeechRecognizer.isRecognitionAvailable(this)) { voiceHandler.postDelayed({ if (serviceRunning && !speaking) listen() }, 2000); return }
     }
 
     private fun listen() {
