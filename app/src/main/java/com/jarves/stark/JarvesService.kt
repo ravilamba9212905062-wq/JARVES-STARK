@@ -120,8 +120,8 @@ class JarvesService : Service() {
             recognizer!!.startListening(intent)
         } catch (_: Exception) {
             recognizer?.destroy()
-            recognizer = null
-            if (serviceRunning && !speaking) {
+    private fun handle(s: String) {
+        val wake = isJarvesWakeWord(s)
                 voiceHandler.postDelayed({ if (serviceRunning && !speaking) listen() }, 1200)
             }
         }
