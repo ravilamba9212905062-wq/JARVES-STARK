@@ -29,20 +29,23 @@ class JarvesService : Service() {
     private lateinit var tts: TextToSpeech
     private val channel = "jarves_voice"
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val voiceHandler = Handler(Looper.getMainLooper())
+    @Volatile private var serviceRunning = false
 
     override fun onCreate() {
         super.onCreate()
+        serviceRunning = true
         memory = MemoryStore(this)
         auth = AuthManager(this)
         if (auth.hasSecret()) auth.lock()
         createNotification()
         tts = TextToSpeech(this) { status ->
             if (status == TextToSpeech.SUCCESS) tts.language = Locale("hi", "IN")
-        Handler(Looper.getMainLooper()).postDelayed({ listen() }, 1000)
+        voiceHandler.postDelayed({ if (serviceRunning) listen() }, 1000)
         }
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_NOT_STICKY
 
     private fun createNotification() {
         if (Build.VERSION.SDK_INT >= 26)
@@ -56,6 +59,7 @@ class JarvesService : Service() {
     }
 
     private fun listen() {
+        if (!serviceRunning) return
         if (MediaManager.isVoiceRecording()) return
         if (!SpeechRecognizer.isRecognitionAvailable(this)) return
         recognizer?.destroy()
@@ -71,9 +75,9 @@ class JarvesService : Service() {
                     if (!secretAttempt) memory.add("user_voice", text)
                 }
                 handle(text)
-                Handler(Looper.getMainLooper()).postDelayed({ listen() }, 2500)
+                voiceHandler.postDelayed({ if (serviceRunning) listen() }, 2500)
             }
-            override fun onError(e: Int) { Handler(Looper.getMainLooper()).postDelayed({ listen() }, 900) }
+            override fun onError(e: Int) { voiceHandler.postDelayed({ if (serviceRunning) listen() }, 900) }
             override fun onReadyForSpeech(p: Bundle?) {}
             override fun onBeginningOfSpeech() {}
             override fun onRmsChanged(r: Float) {}
@@ -151,7 +155,7 @@ class JarvesService : Service() {
                 try { speak(MediaManager.startVoiceRecording(this)) } catch (e: Exception) { speak("Voice recording शुरू नहीं हुई: ${e.message}"); listen() }
             }
             cmd.contains("voice recording बंद") || cmd.contains("voice recording रोक") || cmd.contains("रिकॉर्डिंग रोक") -> {
-                speak(MediaManager.stopVoiceRecording()); Handler(Looper.getMainLooper()).postDelayed({ listen() }, 300)
+                speak(MediaManager.stopVoiceRecording()); voiceHandler.postDelayed({ if (serviceRunning) listen() }, 300)
             }
             cmd.contains("screen recording") || cmd.contains("स्क्रीन रिकॉर्ड") || cmd.contains("स्क्रीन रिकॉर्डिंग") -> {
                 stopSelf(); startMainAction(MainActivity.ACTION_SCREEN); speak("Screen recording की permission window खोल रहा हूँ।")
@@ -379,6 +383,8 @@ class JarvesService : Service() {
     }
 
     override fun onDestroy() {
+        serviceRunning = false
+        voiceHandler.removeCallbacksAndMessages(null)
         serviceScope.cancel()
         recognizer?.destroy()
         if (::tts.isInitialized) tts.shutdown()
