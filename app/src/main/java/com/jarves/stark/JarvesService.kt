@@ -165,30 +165,40 @@ class JarvesService : Service() {
     private fun handlePhoneCommand(s: String): Boolean {
         val q = s.lowercase(Locale.getDefault()).trim()
         try {
-            fun open(i: Intent, msg: String): Boolean {
-                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(i)
-                speak(msg)
-                return true
+            if (q.contains("सेटिंग") || q.contains("settings")) {
+                startActivity(Intent(android.provider.Settings.ACTION_SETTINGS)); speak("हाँ भाई, सेटिंग खोल दी।"); return true
             }
-            if (q.contains("सेटिंग") || q.contains("settings") || q.contains("सेटिंग्स")) return open(Intent(android.provider.Settings.ACTION_SETTINGS), "हाँ भाई, सेटिंग खोल दी।")
-            if (q.contains("वाई फाई") || q.contains("वाईफाई") || q.contains("wifi") || q.contains("wi-fi")) return open(Intent(android.provider.Settings.ACTION_WIFI_SETTINGS), "हाँ भाई, वाई फाई सेटिंग खोल दी।")
-            if (q.contains("ब्लूटूथ") || q.contains("bluetooth")) return open(Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS), "हाँ भाई, ब्लूटूथ सेटिंग खोल दी।")
-            if (q.contains("कैमरा") || q.contains("camera")) return open(Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE), "हाँ भाई, कैमरा खोल दिया।")
+            if (q.contains("वाई फाई") || q.contains("वाईफाई") || q.contains("wifi") || q.contains("wi-fi")) {
+                startActivity(Intent(android.provider.Settings.ACTION_WIFI_SETTINGS)); speak("हाँ भाई, वाई फाई सेटिंग खोल दी।"); return true
+            }
+            if (q.contains("ब्लूटूथ") || q.contains("bluetooth")) {
+                startActivity(Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS)); speak("हाँ भाई, ब्लूटूथ सेटिंग खोल दी।"); return true
+            }
+            if (q.contains("कैमरा") || q.contains("camera")) {
+                startActivity(Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)); speak("हाँ भाई, कैमरा खोल दिया।"); return true
+            }
             if (q.contains("यूट्यूब") || q.contains("youtube")) {
                 val i = packageManager.getLaunchIntentForPackage("com.google.android.youtube")
-                if (i != null) return open(i, "हाँ भाई, यूट्यूब खोल दिया।")
-                return open(Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://www.youtube.com")), "हाँ भाई, यूट्यूब खोल दिया।")
+                if (i != null) { startActivity(i); speak("हाँ भाई, यूट्यूब खोल दिया।"); return true }
             }
-            if (q.contains("डायलर") || q.contains("फोन खोल") || q.contains("फोन") || q.contains("dialer")) return open(Intent(Intent.ACTION_DIAL), "हाँ भाई, फोन खोल दिया।")
-            if (q.contains("मैसेज") || q.contains("संदेश") || q.contains("message") || q.contains("sms")) return open(Intent("android.intent.action.MESSAGING"), "हाँ भाई, मैसेज खोल दिया।")
-            if (q == "होम" || q.contains("होम स्क्रीन") || q == "home" || q.contains("home screen")) return goHome()
+            if (q == "फोन" || q.contains("डायलर") || q.contains("फोन खोल") || q.contains("dialer")) {
+                startActivity(Intent(Intent.ACTION_DIAL)); speak("हाँ भाई, फोन खोल दिया।"); return true
+            }
+            if (q.contains("मैसेज") || q.contains("संदेश") || q.contains("message") || q.contains("sms")) {
+                val i = Intent("android.intent.action.MESSAGING")
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(i)
+                speak("हाँ भाई, मैसेज खोल दिया।")
+                return true
+            }
+            if (q == "होम" || q.contains("होम स्क्रीन") || q == "home" || q.contains("home screen")) {
+                goHome(); return true
+            }
         } catch (_: Exception) {
             speak("भाई, यह काम अभी नहीं हो पाया।")
             return true
         }
         return false
-    }
     }
 
     private fun handle(s: String) {
